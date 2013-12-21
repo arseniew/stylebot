@@ -304,5 +304,20 @@ var Utils = {
 
       return editor;
     }
+  },
+
+  /**
+   * Utility method to check if the currently focused element
+   *   can take user input
+   */
+  isInputField: function(el) {
+    var tagName = el.tagName.toLowerCase();
+    var inputTypes = ['input', 'textarea', 'div', 'object'];
+
+    if ($.inArray(tagName, inputTypes) != -1 || el.id === 'stylebot') {
+      return true;
+    } else {
+      return false;
+    }
   }
 };

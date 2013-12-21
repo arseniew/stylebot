@@ -270,7 +270,9 @@ stylebot.widget.basic = {
 
   // Fill controls with all rules for current selector in cache
   fill: function() {
-    var rule = stylebot.style.getRule(stylebot.style.cache.selector);
+    var selector = stylebot.style.getSelector();
+    var rule = stylebot.style.getRule(selector);
+
     if (rule) {
       var len = this.groups.length;
       for (var i = 0; i < len; i++) {

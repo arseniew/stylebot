@@ -14,13 +14,7 @@ var cache = {
     livePreviewColorPicker: true,
     livePreviewPage: true,
     accordions: [0, 1, 2, 3]
-  },
-
-  importRules: {},
-
-  // Temporary cached map of tabId to rules to prevent recalculating rules
-  // for iframes. Cleared when a tab is closed.
-  loadingTabs: []
+  }
 };
 
 /**

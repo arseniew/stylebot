@@ -13,9 +13,9 @@ var stylebot = {
   selectionBox: null,
   selectorGenerator: null,
 
-  options: {
+  defaults: {
     useShortcutKey: true,
-    shortcutKey: 77, // 77 is keycode for 'm'
+    shortcutKey: 77, // keycode for 'm'
     shortcutMetaKey: 'alt',
     mode: 'Basic',
     position: 'Right',
@@ -25,13 +25,20 @@ var stylebot = {
 
   /**
    * Initialize stylebot
-   * @param {object} options Options to initialize stylebot with
+   * @param {Object} options Stylebot options
+   * @param {Object} styles User styles
    */
-  initialize: function(options) {
-    this.style.initialize();
-    this.setOptions(options);
-    this.contextmenu.initialize();
+  initialize: function(options, styles) {
+    _.bindAll(this);
+
+    this.options = _.defaults(options, this.defaults);
     this.selectorGenerator = new SelectorGenerator();
+
+    this.style.initialize(styles);
+    this.contextmenu.initialize();
+    this.widget.basic.accordions = options.accordions;
+
+    this.attachDocumentListeners();
   },
 
   /**
@@ -59,7 +66,7 @@ var stylebot = {
    * Open stylebot editor
    */
   open: function() {
-    this.attachListeners();
+    this.attachStylebotListeners();
     this.style.enable();
     this.widget.open();
     this.status = true;
@@ -72,15 +79,15 @@ var stylebot = {
    * Close stylebot editor
    */
   close: function() {
-    stylebot.widget.close();
-    stylebot.status = false;
-    stylebot.chrome.setBrowserAction(false);
-    stylebot.style.clean();
-    stylebot.disableSelection();
-    stylebot.detachClickListener();
-    stylebot.unhighlight();
-    stylebot.selectedElement = null;
-    stylebot.destroyHighlighter();
+    this.widget.close();
+    this.status = false;
+    this.chrome.setBrowserAction(false);
+    this.style.clean();
+    this.disableSelection();
+    this.detachStylebotClickListener();
+    this.unhighlight();
+    this.selectedElement = null;
+    this.destroyHighlighter();
     detachKeyboardShortcuts();
   },
 
@@ -89,21 +96,21 @@ var stylebot = {
    * @param {element} el Element to highlight
    */
   highlight: function(el) {
-    if (!stylebot.selectionBox) {
-      stylebot.createHighlighter();
+    if (!this.selectionBox) {
+      this.createHighlighter();
     }
 
-    stylebot.hoveredElement = el;
-    stylebot.selectionBox.highlight(el);
+    this.hoveredElement = el;
+    this.selectionBox.highlight(el);
   },
 
   /**
    * Remove highlight from previously selected element
    */
   unhighlight: function() {
-    stylebot.hoveredElement = null;
-    if (stylebot.selectionBox) {
-      stylebot.selectionBox.hide();
+    this.hoveredElement = null;
+    if (this.selectionBox) {
+      this.selectionBox.hide();
     }
   },
 
@@ -113,50 +120,53 @@ var stylebot = {
    * @param {string} selector CSS selector for elements to select
    */
   select: function(el, selector) {
-    stylebot.disableSelection();
+    this.disableSelection();
 
     // if element is specified, it is selected
     if (el) {
-      stylebot.selectedElement = el;
-      selector = stylebot.selectorGenerator.generate(el);
-      stylebot.highlight(el);
+      this.selectedElement = el;
+      selector = this.selectorGenerator.generate(el);
+      this.highlight(el);
     }
+
     // else select all elements that match the specified CSS selector
     else if (selector) {
       try {
         el = $(selector).get(0);
-        stylebot.selectedElement = el;
-        stylebot.highlight(el);
+        this.selectedElement = el;
+        this.highlight(el);
       }
+
       catch (e) {
-        stylebot.selectedElement = null;
+        this.selectedElement = null;
       }
     }
     else {
-      stylebot.selectedElement = stylebot.hoveredElement;
-      selector = stylebot.selectorGenerator.generate(stylebot.selectedElement);
+      this.selectedElement = this.hoveredElement;
+      selector = this.selectorGenerator.generate(this.selectedElement);
     }
 
-    stylebot.style.fillCache(selector);
-    stylebot.widget.open();
+    this.style.setSelector(selector);
+    this.widget.open();
 
-    setTimeout(function() {
-      stylebot.style.replaceAsInlineCSS(stylebot.style.cache.selector);
-    }, 100);
+    setTimeout(_.bind(function() {
+      this.style.replaceAsInlineCSS(selector);
+    }, this), 100);
   },
 
   /**
    * Enable / disable selection of elements
    */
   toggleSelection: function() {
-    if (stylebot.selectionStatus) {
-      stylebot.select(null, stylebot.style.cache.selector);
-      stylebot.disableSelection();
+    if (this.selectionStatus) {
+      this.select(null, this.style.cache.selector);
+      this.disableSelection();
     }
+
     else {
-      stylebot.widget.disable();
-      stylebot.unhighlight();
-      stylebot.enableSelection();
+      this.widget.disable();
+      this.unhighlight();
+      this.enableSelection();
     }
   },
 
@@ -164,45 +174,72 @@ var stylebot = {
    * Enable selection of elements
    */
   enableSelection: function() {
-    stylebot.attachListeners();
-    stylebot.selectionStatus = true;
-    stylebot.widget.cache.headerSelectIcon
-    .addClass('stylebot-select-icon-active')
-    .attr('title', 'Click to disable selection of element');
+    this.attachStylebotListeners();
+    this.selectionStatus = true;
+    this.widget.cache.headerSelectIcon
+      .addClass('stylebot-select-icon-active')
+      .attr('title', 'Click to disable selection of element');
   },
 
   /**
    * Disable selection of elements
    */
   disableSelection: function() {
-    stylebot.detachListeners();
-    stylebot.selectionStatus = false;
-    stylebot.widget.cache.headerSelectIcon
-    .removeClass('stylebot-select-icon-active')
-    .attr('title', 'Click to enable selection of element');
+    this.detachStylebotListeners();
+    this.selectionStatus = false;
+    this.widget.cache.headerSelectIcon
+      .removeClass('stylebot-select-icon-active')
+      .attr('title', 'Click to enable selection of element');
   },
 
   /**
    * Create the highlighter
    */
   createHighlighter: function() {
-    stylebot.selectionBox = new SelectionBox(null, null, $('#stylebot-container').get(0));
+    this.selectionBox = new SelectionBox(null, null, $('#stylebot-container').get(0));
   },
 
   /**
    * Remove the highlighter
    */
   destroyHighlighter: function() {
-    if (stylebot.selectionBox) {
-      stylebot.selectionBox.destroy();
-      delete stylebot.selectionBox;
+    if (this.selectionBox) {
+      this.selectionBox.destroy();
+      this.selectionBox = null;
     }
+  },
+
+  attachDocumentListeners: function() {
+    document.addEventListener('keydown', _.bind(function(e) {
+      if (Utils.isInputField(e.target)) {
+        return true;
+      }
+
+      if (this.options.useShortcutKey && e.keyCode == this.options.shortcutKey) {
+        if (this.options.shortcutMetaKey === 'ctrl' && e.ctrlKey
+        || this.options.shortcutMetaKey === 'shift' && e.shiftKey
+        || this.options.shortcutMetaKey === 'alt' && e.altKey
+        || this.options.shortcutMetaKey === 'none') {
+          e.preventDefault();
+          e.stopPropagation();
+          this.toggle();
+          return false;
+        }
+      }
+      // Handle Esc key to escape editing mode
+      else if (e.keyCode === 27 && this.shouldClose(e.target)) {
+        e.target.blur();
+        this.close();
+      }
+
+      return true;
+    }, this), true);
   },
 
   /**
    * Add event listeners for mouse activity
    */
-  attachListeners: function() {
+  attachStylebotListeners: function() {
     document.addEventListener('mousemove', this.onMouseMove, true);
     document.addEventListener('mousedown', this.onMouseDown, true);
     document.addEventListener('click', this.onMouseClick, true);
@@ -211,7 +248,7 @@ var stylebot = {
   /**
    * Remove event listeners for mouse activity
    */
-  detachListeners: function() {
+  detachStylebotListeners: function() {
     document.removeEventListener('mousemove', this.onMouseMove, true);
     document.removeEventListener('mousedown', this.onMouseDown, true);
   },
@@ -219,7 +256,7 @@ var stylebot = {
   /**
    * Remove event listener for mouse click
    */
-  detachClickListener: function() {
+  detachStylebotClickListener: function() {
     // We have to remove the click listener in a second phase because if we remove it
     // after the mousedown, we won't be able to cancel clicked links
     // thanks to firebug
@@ -233,35 +270,37 @@ var stylebot = {
     // for dropdown
     if (e.target.className === 'stylebot-dropdown-li') {
       var $el = $(e.target.innerText).get(0);
-      if ($el !== stylebot.hoveredElement) {
-        stylebot.highlight($el);
+      if ($el !== this.hoveredElement) {
+        this.highlight($el);
       }
 
       return true;
     }
 
-    if (!stylebot.shouldSelect(e.target)) {
+    if (!this.shouldSelect(e.target)) {
       return true;
     }
 
-    if (stylebot.belongsToStylebot(e.target)) {
-      stylebot.unhighlight();
+    if (this.belongsToStylebot(e.target)) {
+      this.unhighlight();
       return true;
     }
 
     e.preventDefault();
     e.stopPropagation();
-    stylebot.highlight(e.target);
+
+    this.highlight(e.target);
   },
 
   /**
    * When the user has pressed the mouse button down
    */
   onMouseDown: function(e) {
-    if (!stylebot.belongsToStylebot(e.target)) {
+    if (!this.belongsToStylebot(e.target)) {
       e.preventDefault();
       e.stopPropagation();
-      stylebot.select();
+
+      this.select();
       return false;
     }
   },
@@ -270,10 +309,11 @@ var stylebot = {
    * When the user clicks the mouse
    */
   onMouseClick: function(e) {
-    if (!stylebot.belongsToStylebot(e.target)) {
+    if (!this.belongsToStylebot(e.target)) {
       e.preventDefault();
       e.stopPropagation();
-      stylebot.detachClickListener();
+
+      this.detachStylebotClickListener();
       return false;
     }
   },
@@ -284,9 +324,9 @@ var stylebot = {
    * @return {boolean} True if element belongs to stylebot
    */
   belongsToStylebot: function(el) {
-    var $el = $(el);
-    var parent = $el.closest('#stylebot-container');
-    var id = $el.attr('id');
+    var $el = $(el),
+        parent = $el.closest('#stylebot-container'),
+        id = $el.attr('id');
 
     return (parent.length !== 0 ||
       (id && id.indexOf('stylebot') !== -1));
@@ -298,10 +338,10 @@ var stylebot = {
    * @return {boolean} Returns true if stylebot editor can close
    */
   shouldClose: function(el) {
-    return !(!stylebot.status ||
-      stylebot.widget.basic.isColorPickerVisible ||
-      stylebot.isKeyboardHelpVisible ||
-      stylebot.page.isVisible ||
+    return !(!this.status ||
+      this.widget.basic.isColorPickerVisible ||
+      this.isKeyboardHelpVisible ||
+      this.page.isVisible ||
       $('#stylebot-dropdown').length !== 0 ||
       el.tagName === 'SELECT');
   },
@@ -312,10 +352,10 @@ var stylebot = {
    * @return {boolean} Returns true if element should be selected
    */
   shouldSelect: function(el) {
-    return !(stylebot.widget.isBeingDragged ||
-      stylebot.page.isVisible ||
-      stylebot.isKeyboardHelpVisible ||
-      stylebot.hoveredElement === el
+    return !(this.widget.isBeingDragged ||
+      this.page.isVisible ||
+      this.isKeyboardHelpVisible ||
+      this.hoveredElement === el
     );
   }
 };

@@ -41,15 +41,6 @@ var CSSUtils = {
     return formatter.formatDeclaration(property, value);
   },
 
-  injectCSS: function(css, id) {
-    var style = document.createElement('style');
-    style.type = 'text/css';
-    if (id != undefined)
-      style.setAttribute('id', id);
-    style.appendChild(document.createTextNode(css));
-    document.documentElement.appendChild(style);
-  },
-
   // parser object is that returned by JSCSSP
   getRulesFromParserObject: function(sheet) {
     var importer = new JSCSSPImporter();

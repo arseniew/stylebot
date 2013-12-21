@@ -63,12 +63,12 @@ cssFormatter.prototype = {
       } else {
         css += this.formatRule(selector, rules[selector]);
       }
-    }
 
-    if (end) {
-      callback(css);
-    } else {
-      end = true;
+      if (end) {
+        callback(css);
+      } else {
+        end = true;
+      }
     }
   },
 

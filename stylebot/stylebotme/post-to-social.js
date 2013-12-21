@@ -23,15 +23,18 @@ var PostToSocial = {
    * Open http://stylebot.me/post with pre-filled fields
    */
   post: function() {
-    if (stylebot.style.rules) {
-      CSSUtils.crunchFormattedCSS(stylebot.style.rules, false, false, function(css) {
+    var rules = stylebot.style.getRules(),
+        url = stylebot.style.getUrl();
+
+    if (rules) {
+      CSSUtils.crunchFormattedCSS(rules, false, false, function(css) {
         var form = document.createElement("form");
         form.setAttribute("method", "post");
         form.setAttribute("action", "http://stylebot.me/post");
         form.setAttribute("target", "stylebot_social");
 
         var params = {
-          site: stylebot.style.cache.url,
+          site: url,
           css: css
         };
 

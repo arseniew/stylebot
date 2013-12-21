@@ -22,22 +22,6 @@
   "options_page": "options/index.html",
 
   "content_scripts": [{
-    "matches": ["<all_urls>"],
-
-    "js": [
-      "libs/jscsspimporter.js",
-
-      "shared/cssformatter.js",
-      "shared/css-utils.js",
-
-      "editor/apply-css.js"
-    ],
-
-    "run_at": "document_start",
-    "all_frames": true
-  },
-
-  {
     "matches": ["http://userstyles.org/styles/*"],
 
     "js": [
@@ -94,6 +78,7 @@
     ],
 
     "js": [
+      "libs/jscsspimporter.js",
       "libs/jquery.js",
       "libs/underscore.js",
       "libs/handlebars.js",
@@ -110,6 +95,10 @@
       "shared/selectionBox.js",
       "shared/modalbox/modalbox.js",
       "shared/utils.js",
+      "shared/cssformatter.js",
+      "shared/css-utils.js",
+      "background/styles.js",
+      "background/utils.js",
 
       "stylebotme/post-to-social.js",
 

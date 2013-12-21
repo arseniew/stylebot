@@ -76,7 +76,8 @@ stylebot.widget.advanced = {
   },
 
   onFocus: function() {
-    stylebot.undo.push(Utils.cloneObject(stylebot.style.rules));
+    var rules = stylebot.style.getRules();
+    stylebot.undo.push(Utils.cloneObject(rules));
     self.cache.lastState = self.cache.editor.getSession().getValue();
   },
 
@@ -91,9 +92,12 @@ stylebot.widget.advanced = {
   },
 
   fill: function() {
+    var rules = stylebot.style.getRules();
+    var selector = stylebot.style.getSelector();
+
     var css = CSSUtils.crunchCSSForSelector(
-      stylebot.style.rules,
-      stylebot.style.cache.selector,
+      rules,
+      selector,
       false,
       true);
     this.cache.editor.getSession().setValue(css);

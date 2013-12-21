@@ -23,13 +23,24 @@ stylebot.widget = {
    * Initialize widget UI
    */
   create: function() {
-    var self = stylebot.widget;
+    var self = stylebot.widget,
+        url = stylebot.style.getUrl(),
+        $selectorContainer,
+        $url,
+        $urlContainer,
+        $headerTextContainer,
+        $boxContainer,
+        $optionsContainer,
+        $closeButton,
+        $btContainer,
+        $arrowButton,
+        $settingsButton;
 
     self.cache.box = $('<div>', {
       id: 'stylebot'
     });
 
-    var boxContainer = $('<div>', {
+    $boxContainer = $('<div>', {
       id: 'stylebot-container'
     }).appendTo(document.body);
 
@@ -59,31 +70,31 @@ stylebot.widget = {
     .tipsy({ delayIn: 1500, gravity: 'ne' })
     .mouseup(self.showSelectorDropdown);
 
-    var selectorContainer = $('<div>', {
+    $selectorContainer = $('<div>', {
       id: 'stylebot-header-selector'
     })
     .append(self.cache.headerSelector)
     .append(self.dropDown);
 
     // URL
-    var url = $('<div>', {
-      html: stylebot.style.cache.url,
+    $url = $('<div>', {
+      html: url,
       class: 'stylebot-editable-text',
       title: 'Click to edit the URL for the style'
     })
     .tipsy({delayIn: 1500, gravity: 'n', html: true});
 
-    var urlContainer = $('<div>', {
+    $urlContainer = $('<div>', {
       id: 'stylebot-header-url'
     })
-    .append(url);
+    .append($url);
 
     //  Container for URL and selector
-    var headerTextContainer = $('<div>', {
+    $headerTextContainer = $('<div>', {
       id: 'stylebot-header-container'
     })
-    .append(selectorContainer)
-    .append(urlContainer);
+    .append($selectorContainer)
+    .append($urlContainer);
 
     //  Make selector editable
     Utils.makeEditable(
@@ -93,34 +104,40 @@ stylebot.widget = {
         self.updateHeight();
         self.setSelector(self.cache.headerSelector.html());
         stylebot.select(null, value);
-      }, {
-      selectText: true,
-      editFieldClass: 'stylebot-editing-field'
-    });
+      },
+
+      {
+        selectText: true,
+        editFieldClass: 'stylebot-editing-field'
+      });
 
     //  Make URL editable
     Utils.makeEditable(
-      url,
+      $url,
+
       function(value) {
         self.updateHeight();
-        if (value != stylebot.style.cache.url) {
-          stylebot.chrome.transfer(stylebot.style.cache.url, value);
-          stylebot.style.cache.url = value;
+
+        if (value !== url) {
+          stylebot.chrome.transfer(url, value);
+          stylebot.style.setUrl(value);
         }
-      }, {
-      selectText: true,
-      editFieldClass: 'stylebot-editing-field'
-    });
+      },
+
+      {
+        selectText: true,
+        editFieldClass: 'stylebot-editing-field'
+      });
 
     //  Close button
-    var closeButton = $('<div>', {
+    $closeButton = $('<div>', {
       id: 'stylebot-close-button',
       class: 'stylebot-header-button'
     })
     .click(stylebot.close);
 
     //  Arrow button to toggle stylebot position
-    var arrowButton = $('<div>', {
+    $arrowButton = $('<div>', {
       id: 'stylebot-arrow-button',
       class: 'stylebot-arrow-left stylebot-header-button',
       title: 'Move stylebot to the left'
@@ -131,7 +148,7 @@ stylebot.widget = {
     .mouseup(self.togglePosition);
 
     // Settings button to open options page
-    var settingsButton = $('<div>', {
+    $settingsButton = $('<div>', {
       id: 'stylebot-settings-button',
       class: 'stylebot-header-button',
       title: 'View Options'
@@ -143,10 +160,10 @@ stylebot.widget = {
       id: 'stylebot-header'
     })
     .append(self.cache.headerSelectIcon)
-    .append(headerTextContainer)
-    .append(closeButton)
-    .append(arrowButton)
-    .append(settingsButton)
+    .append($headerTextContainer)
+    .append($closeButton)
+    .append($arrowButton)
+    .append($settingsButton)
     .appendTo(self.cache.box);
 
     //  Basic mode
@@ -156,16 +173,16 @@ stylebot.widget = {
     self.advanced.create(self.cache.box);
 
     //  Options (footer)
-    var optionsContainer = $('<div>', {
+    $optionsContainer = $('<div>', {
       id: 'stylebot-widget-options'
     });
 
     // Basic and Advanced mode buttons
     WidgetUI.createOption(WidgetUI.createButtonSet(['Basic', 'Advanced'],
       'stylebot-mode', 0, self.toggleMode))
-    .appendTo(optionsContainer);
+    .appendTo($optionsContainer);
 
-    var btContainer = $('<div>', {
+    $btContainer = $('<div>', {
       id: 'stylebot-main-buttons'
     });
 
@@ -173,7 +190,7 @@ stylebot.widget = {
     WidgetUI.createButton('Edit CSS')
     .attr('title', 'Edit custom CSS for the page')
     .tipsy({ delayIn: 800, gravity: 'sw', html: true })
-    .appendTo(btContainer)
+    .appendTo($btContainer)
     .click(self.editCSS);
 
     // Undo button
@@ -181,7 +198,7 @@ stylebot.widget = {
     .attr('title', 'Undo your last action')
     .prop('disabled', true)
     .tipsy({ delayIn: 800, gravity: 's', html: true })
-    .appendTo(btContainer)
+    .appendTo($btContainer)
     .click(function(e) { stylebot.style.undo(); });
 
     // Reset button
@@ -189,7 +206,7 @@ stylebot.widget = {
     .attr('title', 'Remove custom CSS for the selected element(s)')
     .prop('disabled', true)
     .tipsy({ delayIn: 500, gravity: 's', html: true })
-    .appendTo(btContainer)
+    .appendTo($btContainer)
     .click(self.resetSelectedElements);
 
     // Reset Custom CSS button
@@ -197,13 +214,13 @@ stylebot.widget = {
     .attr('title', 'Remove custom CSS for the page')
     .prop('disabled', true)
     .tipsy({ delayIn: 500, gravity: 'se', html: true })
-    .appendTo(btContainer)
+    .appendTo($btContainer)
     .click(self.resetPage);
 
-    btContainer.appendTo(optionsContainer);
-    optionsContainer.appendTo(self.cache.box);
+    $btContainer.appendTo($optionsContainer);
+    $optionsContainer.appendTo(self.cache.box);
 
-    self.cache.box.appendTo(boxContainer);
+    self.cache.box.appendTo($boxContainer);
 
     //  Initialize accordion state
     self.basic.initAccordions();
@@ -270,7 +287,7 @@ stylebot.widget = {
     this.attachListeners();
     this.setPosition(stylebot.options.position);
 
-    if (stylebot.style.cache.selector) {
+    if (stylebot.style.getSelector()) {
       this.enable();
     } else {
       this.disable();
@@ -303,7 +320,7 @@ stylebot.widget = {
    * Enable UI of widget
    */
   enable: function() {
-    this.setSelector(stylebot.style.cache.selector);
+    this.setSelector(stylebot.style.getSelector());
     this.basic.enable();
     this.advanced.enable();
   },
@@ -382,17 +399,18 @@ stylebot.widget = {
    * Reset the UI of the widget
    */
   reset: function() {
-    if (stylebot.options.mode === 'Advanced')
+    if (stylebot.options.mode === 'Advanced') {
       stylebot.widget.advanced.reset();
-    else
+    } else {
       stylebot.widget.basic.reset();
+    }
   },
 
   /**
    * Display the page's CSS in a popup for editing
    */
   editCSS: function(e) {
-    CSSUtils.crunchFormattedCSS(stylebot.style.rules, false, false,
+    CSSUtils.crunchFormattedCSS(stylebot.style.getRules(), false, false,
       function(css) {
         stylebot.page.show(css, e ? e.target : null);
       });
@@ -402,7 +420,7 @@ stylebot.widget = {
    * Reset CSS for current selector
    */
   resetSelectedElements: function() {
-    stylebot.undo.push(Utils.cloneObject(stylebot.style.rules));
+    stylebot.undo.push(Utils.cloneObject(stylebot.style.getRules()));
     stylebot.undo.refresh();
     stylebot.widget.reset();
     stylebot.style.resetSelectedElementCSS();
@@ -414,7 +432,7 @@ stylebot.widget = {
    */
   resetPage: function() {
     if (confirm("Are you sure you want to remove custom CSS for this page?")) {
-      stylebot.undo.push(Utils.cloneObject(stylebot.style.rules));
+      stylebot.undo.push(Utils.cloneObject(stylebot.style.getRules()));
       stylebot.undo.refresh();
       stylebot.widget.reset();
       stylebot.style.resetAllCSS();
@@ -500,7 +518,7 @@ stylebot.widget = {
       e.keyCode == 27) {
         $('#stylebot-dropdown').remove();
         stylebot.unhighlight();
-        stylebot.select(null, stylebot.style.cache.selector);
+        stylebot.select(null, stylebot.style.getSelector());
         $(document).unbind('mousedown keydown', onClickElsewhere);
         return true;
       }
@@ -508,11 +526,15 @@ stylebot.widget = {
     };
 
     var any = false;
-    for (var selector in stylebot.style.rules) {
-      if (stylebot.style.rules[selector]['comment'])
+    var rules = stylebot.style.getRules();
+    for (var selector in rules) {
+      if (rules[selector]['comment']) {
         continue;
-      if (stylebot.style.rules[selector]['__isAnimation'])
+      }
+
+      if (rules[selector]['__isAnimation']) {
         continue;
+      }
 
       any = true;
 
@@ -523,10 +545,13 @@ stylebot.widget = {
       })
 
       .hover(function(e) {
-        if (stylebot.selectionStatus)
+        if (stylebot.selectionStatus) {
           return true;
+        }
+
         stylebot.highlight($(e.target.innerText)[0]);
         $(e.target).addClass('stylebot-dropdown-li-selected');
+
         return true;
       })
 
@@ -535,20 +560,25 @@ stylebot.widget = {
       })
 
       .bind('click keydown', function(e) {
-        if (e.type === 'keydown' && e.keyCode != 13)
-        return true;
+        if (e.type === 'keydown' && e.keyCode != 13) {
+          return true;
+        }
+
         var value = e.target.innerHTML;
+
         stylebot.widget.setSelector(value);
         stylebot.widget.updateHeight();
         stylebot.select(null, Utils.HTMLDecode(value));
+
         $(document).unbind('mousedown keydown', onClickElsewhere);
         $('#stylebot-dropdown').remove();
       })
       .appendTo(dropdown);
     }
 
-    if (!any)
+    if (!any) {
       $('<li>', { html: 'No CSS selectors edited' }).appendTo(dropdown);
+    }
 
     dropdown.appendTo(parent);
     $(document).bind('mousedown keydown', onClickElsewhere);
@@ -632,13 +662,16 @@ stylebot.widget = {
   },
 
   refreshResetButtons: function() {
-    if (stylebot.style.rules && !$.isEmptyObject(stylebot.style.rules)) {
+    var rules = stylebot.style.getRules(),
+        selector = stylebot.style.getSelector();
+
+    if (rules && !$.isEmptyObject(rules)) {
       this.enableResetPageButton();
     } else {
       this.disableResetPageButton();
     }
 
-    if (stylebot.style.rules[stylebot.style.cache.selector]) {
+    if (rules[selector]) {
       this.enableResetButton();
     } else {
       this.disableResetButton();

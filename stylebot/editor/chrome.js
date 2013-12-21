@@ -10,7 +10,7 @@ stylebot.chrome = {
   setBrowserAction: function(status) {
     if (status) {
       chrome.extension.sendRequest({ name: 'activateBrowserAction' }, function() {});
-    } else if (!$.isEmptyObject(stylebot.style.rules) || !$.isEmptyObject(stylebot.style.global)) {
+    } else if (!$.isEmptyObject(stylebot.style.getRules()) || !$.isEmptyObject(stylebot.style.getGlobalRules())) {
       chrome.extension.sendRequest({ name: 'highlightBrowserAction' }, function() {});
     } else {
       chrome.extension.sendRequest({ name: 'unhighlightBrowserAction' }, function() {});
@@ -149,10 +149,13 @@ chrome.extension.onRequest.addListener(
     }
 
     if (request.name === 'status') {
+      var rules = stylebot.style.getRules(),
+          globalRules = stylebot.style.getGlobalRules();
+
       sendResponse({
         status: stylebot.status,
-        rules: $.isEmptyObject(stylebot.style.rules) ? null : stylebot.style.rules,
-        global: $.isEmptyObject(stylebot.style.global) ? null : stylebot.style.global
+        rules: $.isEmptyObject(rules) ? null : rules,
+        global: $.isEmptyObject(globalRules) ? null : globalRules
       });
     }
 
@@ -183,20 +186,20 @@ chrome.extension.onRequest.addListener(
       stylebot.style.toggle();
 
       sendResponse({
-        status: stylebot.style.status
+        status: stylebot.style.getStatus()
       });
     }
 
     else if (request.name === 'styleStatus') {
       sendResponse({
-        status: stylebot.style.status
+        status: stylebot.style.getStatus()
       });
     }
 
     else if (request.name === 'getURLAndSocialData') {
       sendResponse({
         url: document.domain ? document.domain : location.href,
-        social: stylebot.style.social
+        social: stylebot.style.getSocialData()
       });
     }
 

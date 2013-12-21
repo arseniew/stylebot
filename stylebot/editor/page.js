@@ -20,9 +20,10 @@ stylebot.page = {
   },
 
   create: function(options) {
-    var html = Handlebars.templates['page']({
-      url: stylebot.style.cache.url
-    });
+    var url = stylebot.style.getUrl(),
+        html = Handlebars.templates['page']({
+          url: url
+        });
 
     this.modal = new ModalBox(html, options, function() {});
     this.initializeEditor();
@@ -91,6 +92,7 @@ stylebot.page = {
         stylebot.page.resize();
         var editor = self.cache.editor;
         var session = editor.getSession();
+        var rules = stylebot.style.getRules();
 
         session.setValue(self.cache.originalCSS);
 
@@ -104,7 +106,7 @@ stylebot.page = {
         }
 
         self.clearSyntaxError();
-        stylebot.undo.push(Utils.cloneObject(stylebot.style.rules));
+        stylebot.undo.push(Utils.cloneObject(rules));
         self.cache.css = session.getValue();
       },
 

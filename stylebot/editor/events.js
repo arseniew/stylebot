@@ -59,7 +59,8 @@ Events = {
   },
 
   onTextFieldFocus: function(e) {
-    stylebot.undo.push(Utils.cloneObject(stylebot.style.rules));
+    var rules = stylebot.style.getRules();
+    stylebot.undo.push(Utils.cloneObject(rules));
     $(e.target).data('lastState', e.target.value);
   },
 
@@ -135,11 +136,12 @@ Events = {
           var fontURL = Events.GOOGLE_FONT_API + value.replace(/ /g, '+');
           chrome.extension.sendRequest({name: "fetchImportCSS", url: fontURL},
             function(response) {
-              stylebot.undo.push(Utils.cloneObject(stylebot.style.rules));
+              var rules = stylebot.style.getRules();
+              stylebot.undo.push(Utils.cloneObject(rules));
 
               // Hacky check to see if Google Web Font exists.
               if (response.text.indexOf("@font-face") == 0) {
-                stylebot.style.prependWebFont(fontURL, response.text);
+                stylebot.style.applyWebFont(fontURL, response.text);
               }
 
               stylebot.style.apply(property, value);
@@ -227,7 +229,8 @@ Events = {
   },
 
   saveProperty: function(property, value) {
-    stylebot.undo.push(Utils.cloneObject(stylebot.style.rules));
+    var rules = stylebot.style.getRules();
+    stylebot.undo.push(Utils.cloneObject(rules));
     stylebot.style.apply(property, value);
     stylebot.undo.refresh();
   }
