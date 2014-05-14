@@ -43,6 +43,14 @@ stylebot.widget.basic = {
       el: null
     },
     {
+      name: 'Align',
+      id: 'text-align',
+      type: 'segmented',
+      values: ['left','right','center','justify'],
+      options: ['left','right','center','jfy'],
+      el: null
+    },
+    {
       name: 'Font Variant',
       id: 'font-variant',
       type: 'segmented',
